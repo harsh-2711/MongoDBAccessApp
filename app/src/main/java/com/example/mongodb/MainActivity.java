@@ -2,8 +2,8 @@ package com.example.mongodb;
 
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,45 +12,39 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.mongodb.BasicDBList;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.client.ListCollectionsIterable;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
 
-import org.bson.Document;
-
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     ListView listView;
     SearchView searchView;
 
     ArrayList<String> propertyName, propertyLocation, propertyType, propertyAmount, contractType, floor, carpetArea, state, city, description;
-    ArrayAdapter<String > adapter;
+    ArrayAdapter<String> adapter;
 
     Button button;
     EditText editText;
+    Spinner typeProperty, buySell;
 
     String selected_place;
+    String contract = "None";
+    String rentSell = "None";
+    String none = "none";
 
     TextView result_text;
 
@@ -104,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
         editText = (EditText) findViewById(R.id.edit_text);
         list = (ListView) findViewById(R.id.list);
         result_text = (TextView) findViewById(R.id.result_text);
+        typeProperty = (Spinner) findViewById(R.id.property_type);
+        buySell = (Spinner) findViewById(R.id.buy_sell);
 
         propertyName = new ArrayList<>();
         propertyLocation = new ArrayList<>();
@@ -167,7 +163,64 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
+        typeProperty.setOnItemSelectedListener(this);
+        buySell.setOnItemSelectedListener(this);
+
+        // Spinner Drop down elements
+        List<String> typeOfProperty = new ArrayList<String>();
+        typeOfProperty.add("None");
+        typeOfProperty.add("Land");
+        typeOfProperty.add("Apartment");
+        typeOfProperty.add("Shop");
+
+        List<String> buyOrSell = new ArrayList<String>();
+        buyOrSell.add("None");
+        buyOrSell.add("Buy");
+        buyOrSell.add("Rent");
+
+        // Creating adapter for spinner
+        ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, typeOfProperty);
+        typeProperty.setAdapter(dataAdapter);
+
+        ArrayAdapter<String> newDataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, buyOrSell);
+        buySell.setAdapter(newDataAdapter);
+
+        // Drop down layout style - list view with radio button
+        dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        newDataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // attaching data adapter to spinner
     }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        // On selecting a spinner item
+        String item = parent.getItemAtPosition(position).toString();
+        if(item.equals("None")){
+            none = "None";
+        } else {
+            if (item.equals("Land") || item.equals("Apartment") || item.equals("Shop")) {
+                contract = item;
+                none = "No";
+                Toast.makeText(MainActivity.this, contract, Toast.LENGTH_SHORT).show();
+            } else {
+                none = "No";
+                if (item.equals("Buy")) {
+                    rentSell = "forsell";
+                } else {
+                    rentSell = "rent";
+                }
+                Toast.makeText(MainActivity.this, rentSell, Toast.LENGTH_SHORT).show();
+            }
+        }
+
+    }
+
+    public void onNothingSelected(AdapterView<?> arg0) {
+        // TODO Auto-generated method stub
+
+    }
+
 
     private class MongoDB extends AsyncTask<Void, Void, Void> {
 
@@ -238,34 +291,53 @@ public class MainActivity extends AppCompatActivity {
                 DBObject userObj = (DBObject) obj;
                 Log.d("Name", userObj.get("propertyName").toString());
 
-                if(selected_place.toLowerCase().equals(userObj.get("propertyName").toString().toLowerCase())) {
+                if ((userObj.get("propertyName").toString().toLowerCase()).contains(selected_place.toLowerCase()) || (selected_place.toLowerCase()).contains((userObj.get("propertyName").toString().toLowerCase()))) {
+                    if(none.equals("None")){
+                        propertyName.add(userObj.get("propertyName").toString());
+                        propertyLocation.add(userObj.get("propertyLocation").toString());
+                        propertyType.add(userObj.get("property_type").toString());
+                        propertyAmount.add(userObj.get("property_amount").toString());
+                        contractType.add(userObj.get("contract_type").toString());
+                        floor.add(userObj.get("floor").toString());
+                        carpetArea.add(userObj.get("carpet_area").toString());
+                        state.add(userObj.get("state").toString());
+                        city.add(userObj.get("city").toString());
+                        description.add(userObj.get("description").toString());
 
-                    propertyName.add(userObj.get("propertyName").toString());
-                    propertyLocation.add(userObj.get("propertyLocation").toString());
-                    propertyType.add(userObj.get("property_type").toString());
-                    propertyAmount.add(userObj.get("property_amount").toString());
-                    contractType.add(userObj.get("contract_type").toString());
-                    floor.add(userObj.get("floor").toString());
-                    carpetArea.add(userObj.get("carpet_area").toString());
-                    state.add(userObj.get("state").toString());
-                    city.add(userObj.get("city").toString());
-                    description.add(userObj.get("description").toString());
+                        data.add(new Result(userObj.get("description").toString(), userObj.get("propertyName").toString(), userObj.get("contract_type").toString(), userObj.get("property_amount").toString(), counter));
+                        counter++;
 
-                    data.add(new Result(userObj.get("propertyName").toString(), userObj.get("description").toString(), counter));
-                    counter++;
+                        temp = true;
+                    } else {
+                        if (userObj.get("property_type").toString().toLowerCase().contains(contract.toLowerCase()) && (rentSell.toLowerCase().equals(userObj.get("contract_type").toString().toLowerCase()) || (userObj.get("contract_type").toString().toLowerCase().equals("buy")))) {
+                            propertyName.add(userObj.get("propertyName").toString());
+                            propertyLocation.add(userObj.get("propertyLocation").toString());
+                            propertyType.add(userObj.get("property_type").toString());
+                            propertyAmount.add(userObj.get("property_amount").toString());
+                            contractType.add(userObj.get("contract_type").toString());
+                            floor.add(userObj.get("floor").toString());
+                            carpetArea.add(userObj.get("carpet_area").toString());
+                            state.add(userObj.get("state").toString());
+                            city.add(userObj.get("city").toString());
+                            description.add(userObj.get("description").toString());
 
-                    temp = true;
+                            data.add(new Result(userObj.get("description").toString(), userObj.get("propertyName").toString(), userObj.get("contract_type").toString(), userObj.get("property_amount").toString(), counter));
+                            counter++;
+
+                            temp = true;
+                        }
+                    }
                 }
 
             }
-                return null;
+            return null;
 
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            if(propertyName.size() > 0) {
+            if (propertyName.size() > 0) {
                 result_text.setText("Result");
 
                 customAdapter.notifyDataSetChanged();
@@ -281,12 +353,11 @@ public class MainActivity extends AppCompatActivity {
                         "\nState: " + state +
                         "\n\nDescription: " + description);
                 */
-            }
-            else {
+            } else {
                 result_text.setText("Not Found");
             }
 
-            if(temp)
+            if (temp)
                 list.setVisibility(View.VISIBLE);
             else {
                 list.setVisibility(View.GONE);
