@@ -17,7 +17,8 @@ public class CustomAdapter extends ArrayAdapter<Result> {
 
     private static class ViewHolder {
         TextView place;
-        TextView desc;
+        TextView contract;
+        TextView amount;
     }
 
     public CustomAdapter(ArrayList<Result> data, Context context) {
@@ -42,7 +43,8 @@ public class CustomAdapter extends ArrayAdapter<Result> {
             convertView = layoutInflater.inflate(R.layout.adapter_content, parent, false);
 
             viewHolder.place = (TextView) convertView.findViewById(R.id.place_name);
-            viewHolder.desc = (TextView) convertView.findViewById(R.id.description);
+            viewHolder.contract = (TextView) convertView.findViewById(R.id.contract_type);
+            viewHolder.amount = (TextView) convertView.findViewById(R.id.property_amount);
 
             view = convertView;
 
@@ -54,7 +56,8 @@ public class CustomAdapter extends ArrayAdapter<Result> {
         }
 
         viewHolder.place.setText(result.getPlaceName());
-        viewHolder.desc.setText(result.getDescription());
+        viewHolder.amount.setText("AMOUNT: " + String.valueOf(result.getAmount()));
+        viewHolder.contract.setText("CONTRACT: "+ result.getContractType());
 
         return convertView;
     }
