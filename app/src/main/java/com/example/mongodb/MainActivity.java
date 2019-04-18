@@ -238,7 +238,8 @@ public class MainActivity extends AppCompatActivity {
                 DBObject userObj = (DBObject) obj;
                 Log.d("Name", userObj.get("propertyName").toString());
 
-                if(selected_place.toLowerCase().equals(userObj.get("propertyName").toString().toLowerCase())) {
+                if(selected_place.toLowerCase().equals(userObj.get("propertyName").toString().toLowerCase()) ||
+                        userObj.get("propertyName").toString().toLowerCase().contains(selected_place.toLowerCase())) {
 
                     propertyName.add(userObj.get("propertyName").toString());
                     propertyLocation.add(userObj.get("propertyLocation").toString());
